@@ -111,7 +111,7 @@ def random():
 @route('/getcell/')
 def getcell():
     cell_num = int(request.params.get('pointer', DATA['pointer']))
-    if cell_num > 0 and cell_num < len(DATA['scores']):
+    if cell_num >= 0 and cell_num < len(DATA['scores']):
         DATA['pointer'] = cell_num
         return json.dumps({"status": True, **get_payload()})
     return json.dumps({"status": False})
