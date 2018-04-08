@@ -5,12 +5,27 @@ import numpy as np
 from .server import PORT
 
 
+def _check_lengths(text, scores, rtype):
+    _error = None
+    if rtype == 'simple':
+        if len(text) != len(scores):
+            _error = "Unequal lengths: {} != {}".format(len(text), len(scores))
+    else:
+        for idx, s in enumerate(scores):
+            if len(text) != len(s):
+                _error = "Unequal lengths: {} != {} at pos {}".format(
+                    len(text), len(s), idx)
+                break
+    if _error is not None:
+        raise ValueError(_error)
+
+
+def post_request(data, url='http://localhost:{}/register/', port=PORT):
+    return requests.post(url.format(PORT), json=data, stream=True)
+
+
 def register_data(text, scores, port=PORT):
     rtype = 'simple'
-
-    if len(text) != len(scores):
-        raise ValueError("Unequal lengths: {} != {}".format(
-            len(text), len(scores)))
 
     if isinstance(scores[0], (list, np.ndarray)):
         rtype = 'mult'
@@ -18,10 +33,9 @@ def register_data(text, scores, port=PORT):
     if isinstance(scores, np.ndarray):
         scores = scores.tolist()
 
-    data = {'text': text, 'scores': scores, 'rtype': rtype}
+    _check_lengths(text, scores, rtype)
 
-    r = requests.post(
-        'http://localhost:{}/register/'.format(PORT), json=data)
+    r = post_request({'text': text, 'scores': scores, 'rtype': rtype}, port=port)
 
     return r.status_code == 200
 

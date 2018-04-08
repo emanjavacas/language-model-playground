@@ -27,6 +27,23 @@ def rnn_input(model, seed):
     return Variable(torch.LongTensor(inp).unsqueeze(1), volatile=True)
 
 
+def rnn_input_text(model, inp):
+    """
+    Transform the rnn to text using the model's own dictionary
+    """
+    targets, d = [], model.embeddings.d
+    eos, bos = d.get_eos(), d.get_bos()
+    for i in inp:
+        if eos is not None and i == eos:
+            targets.append('\n')
+        elif bos is not None and i == bos:
+            continue
+        else:
+            targets.append(d.vocab[i])
+
+    return targets
+
+
 def get_next_probability(model, seed):
     """
     Get model's next step probability distribution
@@ -66,16 +83,8 @@ def stepwise_scores(model, text, score_entropy=False):
     logprobs = model.project(output)
     inp, logprobs = inp[1:].squeeze(1).data, logprobs[:-1].data
 
-    # compute text targets
-    targets, d = [], model.embeddings.d
-    eos, bos = d.get_eos(), d.get_bos()
-    for i in inp:
-        if eos is not None and i == eos:
-            targets.append('\n')
-        elif bos is not None and i == bos:
-            continue
-        else:
-            targets.append(d.vocab[i])
+    # get target text
+    targets = rnn_input_text(model, inp)
 
     # score
     if score_entropy:
@@ -87,6 +96,24 @@ def stepwise_scores(model, text, score_entropy=False):
     return targets, scores.numpy()
 
 
+def get_activations(model, text):
+    """
+    get last layer activations
+    """
+    inp = rnn_input(model, text)
+    output, _, _ = model(inp)
+    output = output.squeeze(1)       # remove batch dim
+    output = output[:-1]             # remove extra activation
+    output = output.transpose(0, 1)  # cell first
+    output = output.data.numpy()
+
+    inp = inp.squeeze(1).data[1:]
+    targets = rnn_input_text(model, inp)
+
+    return targets, output
+
+
 # from seqmod.utils import load_model
 # lm = load_model('./models/shakespeare-1.8850.pt')
-# idx, probs = stepwise_scores(lm, 'Hi there')
+# # idx, probs = stepwise_scores(lm, 'To be or not to be')
+# output = get_activations(lm, 'To be or not to be ')

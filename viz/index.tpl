@@ -17,8 +17,9 @@
     <div id="message" style="display:flex;justify-content:center; margin-top:100px">
       {{msg}}
     </div>
+      <div id="buttons" style="display:inline-block"></div>
+      <div id="pointer" style="display:inline-block"></div>
     <div id="wrap">
-      <div id="buttons"></div>
       <div id="viz"></div>
     </div>
   </body>

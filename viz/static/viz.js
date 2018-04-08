@@ -8,15 +8,15 @@ window.RTYPE = null;
 function toColor(v) { 
   // v is -1 to 1 initially
   var h;
-  var l = (Math.floor(v * 40) + 60) + '%';
 
   if(v > 0) {
-    h = 200;
+    h = 200;   // blue
     v = 1 - v; // invert so v = 0 is highest lightness (white)
   } else {
-    h = 0;
+    h = 0;     // red
     v = 1 + v; // invert too
   }
+  var l = (Math.floor(v * 40) + 60) + '%'; // 
 
   return sprintf('hsl(%d,%s,%s)', h, '60%', l);
 }
@@ -29,8 +29,9 @@ function render(div, data) {
 
     var letter = data.text[i];
     var e = data.scores[i];
-    e = Math.tanh(e); // squash into (-1, 1)
+    e = Math.tanh(e * 2); // squash into (-1, 1) before scaling (avoid too much white)
     var col = toColor(e);
+    console.log(col, e);
     var css = 'background-color:' + col;
 
     if(letter == ' ') {
@@ -46,9 +47,44 @@ function render(div, data) {
 }
 
 
+function resetPointer(pointer) {
+  $('#pointer').text(sprintf("Showing %d cell score", pointer));
+  $('#pointer-inp').val(pointer);
+}
+
+
+function redrawButtons() {
+  $("#buttons").empty();
+  if (window.RTYPE == 'mult') {
+    var btnPrev = $("<button>Prev</button>");
+    btnPrev.addClass("button");
+    btnPrev.click(function() {route('prev', window.TOKEN);});
+    btnPrev.appendTo("#buttons");
+    var btnNext = $("<button>Next</button>");
+    btnNext.addClass("button");
+    btnNext.click(function() {route('next', window.TOKEN);});
+    btnNext.appendTo("#buttons");
+    var btnRandom = $("<button>Random</button>");
+    btnRandom.addClass("button");
+    btnRandom.click(function() {route('random', window.TOKEN);});
+    btnRandom.appendTo("#buttons");
+    var pointerInp = $("<input id='pointer-inp' type='number' min='0'>");
+    pointerInp.addClass("button");
+    pointerInp.on('keypress', function(e){
+      if(e.which === 13) {
+	var value = $('#pointer-inp').val();
+	if (value != "") {
+	  getCellActivation(window.TOKEN, value);
+	}
+      }
+    });
+    pointerInp.appendTo("#buttons");
+  }
+}
+
+
+
 function onData(response) {
-  console.log(response);
-  
   if (response.status) {
     // remove message if still there
     $('#message').empty();
@@ -58,42 +94,50 @@ function onData(response) {
     window.RTYPE = response.rtype;
     window.TOKEN = response.token;
     // redraw
-    redrawButtons();
+    if (response.rtype == 'mult') {
+      redrawButtons();
+      resetPointer(response.pointer);
+    }
     render(d3.select("#viz"), GDATA);
   }
 }
 
 
-function next(response) {
-}
-
-function prev(response) {
-}
-
-
-function redrawButtons() {
-  $("#buttons").empty();
-  if (window.RTYPE == 'mult') {
-    var btn1 = $("<button>Next</button>");
-    btn1.addClass("button");
-    btn1.click(function() {next();});
-    btn1.appendTo("#buttons");
-    var btn2 = $("<button>Prev</button>");
-    btn2.addClass("button");
-    btn2.click(function() {prev();});
-    btn2.appendTo("#buttons");
-  }
-}
-
-
-function poll(token, port) {
-  var url = sprintf("http://localhost:%d/poll/", port);
+function route(target, token) {
+  var url = sprintf("http://localhost:%d/%s/", PORT, target);
   $.ajax({
-    url: url, type: 'GET', success: onData, data: {'token': token}, dataType: 'json'
+    url: url,
+    type: 'GET',
+    success: onData,
+    data: {'token': token},
+    dataType: 'json'
+  });
+};
+
+
+function getCellActivation(token, pointer) {
+  $.ajax({
+    url: sprintf("http://localhost:%d/getcell/", PORT),
+    type: 'GET',
+    success: onData,
+    data: {'token': token, 'pointer': pointer},
+    dataType: 'json'
+  });
+};
+
+
+function poll(token) {
+  var url = sprintf("http://localhost:%d/poll/", PORT);
+  $.ajax({
+    url: url,
+    type: 'GET',
+    success: onData,
+    data: {'token': token},
+    dataType: 'json'
   });
 };
 
 
 $(document).ready(function() {
-  window.setInterval(function() {poll(window.TOKEN, PORT);}, 2000);
+  window.setInterval(function() {poll(window.TOKEN);}, 2000);
 });
