@@ -31,7 +31,6 @@ function render(div, data) {
     var e = data.scores[i];
     e = Math.tanh(e * 2); // squash into (-1, 1) before scaling (avoid too much white)
     var col = toColor(e);
-    console.log(col, e);
     var css = 'background-color:' + col;
 
     if(letter == ' ') {
