@@ -82,7 +82,7 @@ class UnsmoothedLM(object):
         new_probs = probs ** (1 / tau)
         return new_probs / new_probs.sum()
 
-    def stepwise_scores(self, text, score_entropy=False):
+    def get_probabilities(self, text, score_entropy=False):
         """
         Compute stepwise scores (probabilities) over input sequence.
         If `score_entropy` is passed, the output will be the step entropy.

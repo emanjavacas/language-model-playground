@@ -5,17 +5,20 @@ import matplotlib.pyplot as plt
 
 def plot_output(targets, probs, prefix):
     # sort alphabetically
-    targets, probs = zip(*sorted(zip(targets, probs), key=lambda t: t[0]))
+    targets, probs = zip(*sorted(zip(targets, probs), key=lambda tup: tup[0]))
     # transform into array
     probs = np.array(probs)
+    x = np.arange(len(targets))
 
     fig = plt.figure(figsize=(16, 4))
-    x = np.arange(len(targets))
-    plt.bar(x, probs)
-    plt.title(''.join(prefix))
-    plt.xticks(x, targets)
-    plt.yticks(np.linspace(0, 1, 9))
-    plt.show()
+    ax = fig.add_subplot(111)
+    ax.bar(x, probs)
+    ax.set_title("History: '{}'".format("".join(prefix)))
+    ax.set_xticks(x)
+    ax.set_xticklabels(targets)
+    ax.set_yticks(np.linspace(0, 1, 9))
+
+    return ax
 
 
 def entropy(probs, vocab_size):

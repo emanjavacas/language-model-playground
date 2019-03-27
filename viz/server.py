@@ -22,7 +22,9 @@ DATA = {
     # mult or simple (multiple scores per token or just one)
     'rtype': None,
     # in case of `mult` rtype, store the current pointer
-    'pointer': 0
+    'pointer': 0,
+    # is the input word level?
+    'word': False
 }
 
 
@@ -58,6 +60,7 @@ def register():
         DATA['scores'] = request.json['scores']
         DATA['token'] = str(uuid.uuid1())
         DATA['rtype'] = request.json['rtype']
+        DATA['word'] = request.json['word']
         response.status = 200
         return
 

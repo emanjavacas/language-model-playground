@@ -24,7 +24,7 @@ def post_request(data, url='http://localhost:{}/register/', port=PORT):
     return requests.post(url.format(PORT), json=data, stream=True)
 
 
-def register_data(text, scores, port=PORT):
+def register_data(text, scores, word=False, port=PORT):
     rtype = 'simple'
 
     if isinstance(scores[0], (list, np.ndarray)):
@@ -35,7 +35,9 @@ def register_data(text, scores, port=PORT):
 
     _check_lengths(text, scores, rtype)
 
-    r = post_request({'text': text, 'scores': scores, 'rtype': rtype}, port=port)
+    r = post_request(
+        {'text': text, 'scores': scores, 'rtype': rtype, 'word': word},
+        port=port)
 
     return r.status_code == 200
 

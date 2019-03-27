@@ -32,6 +32,7 @@ function render(div, data) {
     e = Math.tanh(e * 2); // squash into (-1, 1) before scaling (avoid too much white)
     var col = toColor(e);
     var css = 'background-color:' + col;
+    css += ';width:' + (letter.length + 'ch');
 
     if(letter == ' ') {
       letter = '_'; // ha, ha Justin trick
@@ -42,6 +43,9 @@ function render(div, data) {
     }
 
     div.append('div').attr('class', 'd').attr('style', css).html(letter);
+    if (data.word) {
+      div.append('div').attr('class', 'd').attr('style', 'width:1ch').html('&nbsp;');
+    }
   }
 }
 
@@ -82,7 +86,6 @@ function redrawButtons() {
 }
 
 
-
 function onData(response) {
   if (response.status) {
     // remove message if still there
@@ -90,6 +93,7 @@ function onData(response) {
     // update globals
     window.GDATA.text = response.text;
     window.GDATA.scores = response.scores;
+    window.GDATA.word = response.word;
     window.RTYPE = response.rtype;
     window.TOKEN = response.token;
     // redraw
